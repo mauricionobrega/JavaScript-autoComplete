@@ -43,7 +43,8 @@ var autoComplete = (function(){
                 var re = new RegExp("(" + search.split(' ').join('|') + ")", "gi");
                 return '<div class="autocomplete-suggestion" data-val="' + item + '">' + item.replace(re, "<b>$1</b>") + '</div>';
             },
-            onSelect: function(e, term, item){}
+            onSelect: function(e, term, item){},
+            onSelected: function(e, term, item){},
         };
         for (var k in options) { if (options.hasOwnProperty(k)) o[k] = options[k]; }
 
@@ -93,6 +94,7 @@ var autoComplete = (function(){
                 var sel = that.sc.querySelector('.autocomplete-suggestion.selected');
                 if (sel) sel.className = sel.className.replace('selected', '');
                 this.className += ' selected';
+                o.onSelected(e, that.value, this);
             }, that.sc);
 
             live('autocomplete-suggestion', 'mousedown', function(e){
@@ -136,12 +138,14 @@ var autoComplete = (function(){
                         next = (key == 40) ? that.sc.querySelector('.autocomplete-suggestion') : that.sc.childNodes[that.sc.childNodes.length - 1]; // first : last
                         next.className += ' selected';
                         that.value = next.getAttribute('data-val');
+                        o.onSelected(e, that.value, next);
                     } else {
                         next = (key == 40) ? sel.nextSibling : sel.previousSibling;
                         if (next) {
                             sel.className = sel.className.replace('selected', '');
                             next.className += ' selected';
                             that.value = next.getAttribute('data-val');
+                            o.onSelected(e, that.value, next);
                         }
                         else { sel.className = sel.className.replace('selected', ''); that.value = that.last_val; next = 0; }
                     }
