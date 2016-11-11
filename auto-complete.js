@@ -1,7 +1,7 @@
 /*
     JavaScript autoComplete v1.0.4
     Copyright (c) 2014 Simon Steinberger / Pixabay
-    GitHub: https://github.com/Pixabay/JavaScript-autoComplete
+    GitHub: https://github.com/mauricionobrega/JavaScript-autoComplete.git
     License: http://www.opensource.org/licenses/mit-license.php
 */
 
@@ -46,7 +46,7 @@ var autoComplete = (function(){
             onSelect: function(e, term, item){},
             onHover: function(e, term, item){},
             onShow: function(){},
-            onHide: function(){},
+            onHide: function(){}
         };
         for (var k in options) { if (options.hasOwnProperty(k)) o[k] = options[k]; }
 
@@ -73,16 +73,20 @@ var autoComplete = (function(){
                     that.sc.style.display = 'block';
                     o.onShow();
                     if (!that.sc.maxHeight) { that.sc.maxHeight = parseInt((window.getComputedStyle ? getComputedStyle(that.sc, null) : that.sc.currentStyle).maxHeight); }
-                    if (!that.sc.suggestionHeight) that.sc.suggestionHeight = that.sc.querySelector('.autocomplete-suggestion').offsetHeight;
-                    if (that.sc.suggestionHeight)
-                        if (!next) that.sc.scrollTop = 0;
-                        else {
-                            var scrTop = that.sc.scrollTop, selTop = next.getBoundingClientRect().top - that.sc.getBoundingClientRect().top;
-                            if (selTop + that.sc.suggestionHeight - that.sc.maxHeight > 0)
-                                that.sc.scrollTop = selTop + that.sc.suggestionHeight + scrTop - that.sc.maxHeight;
-                            else if (selTop < 0)
-                                that.sc.scrollTop = selTop + scrTop;
-                        }
+                    if (!that.sc.suggestionHeight) {
+                      var suggestion = that.sc.querySelector('.autocomplete-suggestion');
+                      that.sc.suggestionHeight = suggestion ? that.sc.querySelector('.autocomplete-suggestion').offsetHeight : 1;
+                    }
+                    if (that.sc.suggestionHeight) {
+                      if (!next) that.sc.scrollTop = 0;
+                      else {
+                          var scrTop = that.sc.scrollTop, selTop = next.getBoundingClientRect().top - that.sc.getBoundingClientRect().top;
+                          if (selTop + that.sc.suggestionHeight - that.sc.maxHeight > 0)
+                              that.sc.scrollTop = selTop + that.sc.suggestionHeight + scrTop - that.sc.maxHeight;
+                          else if (selTop < 0)
+                              that.sc.scrollTop = selTop + scrTop;
+                      }
+                    }
                 }
             }
             addEvent(window, 'resize', that.updateSC);
