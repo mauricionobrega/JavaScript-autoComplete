@@ -37,6 +37,7 @@ var autoComplete = (function(){
             offsetTop: 1,
             cache: 1,
             menuClass: '',
+            wrapper: document.body,
             renderItem: function (item, search){
                 // escape special characters
                 search = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -49,11 +50,13 @@ var autoComplete = (function(){
             onHide: function(){}
         };
         for (var k in options) { if (options.hasOwnProperty(k)) o[k] = options[k]; }
-
         // init
         var elems = typeof o.selector == 'object' ? [o.selector] : document.querySelectorAll(o.selector);
         for (var i=0; i<elems.length; i++) {
             var that = elems[i];
+
+            // set in instance options
+            that.scOptions = o;
 
             // create suggestions container "sc"
             that.sc = document.createElement('div');
@@ -66,12 +69,14 @@ var autoComplete = (function(){
 
             that.updateSC = function(resize, next){
                 var rect = that.getBoundingClientRect();
-                that.sc.style.left = Math.round(rect.left + (window.pageXOffset || document.documentElement.scrollLeft) + o.offsetLeft) + 'px';
-                that.sc.style.top = Math.round(rect.bottom + (window.pageYOffset || document.documentElement.scrollTop) + o.offsetTop) + 'px';
-                that.sc.style.width = Math.round(rect.right - rect.left) + 'px'; // outerWidth
+                if (!options.wrapper) {
+                  that.sc.style.left = Math.round(rect.left + (window.pageXOffset || document.documentElement.scrollLeft) + o.offsetLeft) + 'px';
+                  that.sc.style.top = Math.round(rect.bottom + (window.pageYOffset || document.documentElement.scrollTop) + o.offsetTop) + 'px';
+                  that.sc.style.width = Math.round(rect.right - rect.left) + 'px'; // outerWidth
+                }
                 if (!resize) {
                     that.sc.style.display = 'block';
-                    o.onShow();
+                    o.onShow(that);
                     if (!that.sc.maxHeight) { that.sc.maxHeight = parseInt((window.getComputedStyle ? getComputedStyle(that.sc, null) : that.sc.currentStyle).maxHeight); }
                     if (!that.sc.suggestionHeight) {
                       var suggestion = that.sc.querySelector('.autocomplete-suggestion');
@@ -90,7 +95,7 @@ var autoComplete = (function(){
                 }
             }
             addEvent(window, 'resize', that.updateSC);
-            document.body.appendChild(that.sc);
+            o.wrapper.appendChild(that.sc);
 
             live('autocomplete-suggestion', 'mouseleave', function(e){
                 var sel = that.sc.querySelector('.autocomplete-suggestion.selected');
@@ -110,7 +115,7 @@ var autoComplete = (function(){
                     that.value = v;
                     o.onSelect(e, v, this);
                     that.sc.style.display = 'none';
-                    o.onHide();
+                    o.onHide(that);
                 }
             }, that.sc);
 
@@ -119,8 +124,8 @@ var autoComplete = (function(){
                 if (!over_sb) {
                     that.last_val = that.value;
                     that.sc.style.display = 'none';
-                    o.onHide();
-                    setTimeout(function(){ that.sc.style.display = 'none'; o.onHide(); }, 350); // hide suggestions on fast input
+                    o.onHide(that);
+                    setTimeout(function(){ that.sc.style.display = 'none'; o.onHide(that); }, 350); // hide suggestions on fast input
                 } else if (that !== document.activeElement) setTimeout(function(){ that.focus(); }, 20);
             };
             addEvent(that, 'blur', that.blurHandler);
@@ -136,7 +141,7 @@ var autoComplete = (function(){
                 }
                 else {
                   that.sc.style.display = 'none';
-                  o.onHide();
+                  o.onHide(that);
                 }
             }
 
@@ -164,11 +169,11 @@ var autoComplete = (function(){
                     return false;
                 }
                 // esc
-                else if (key == 27) { that.value = that.last_val; that.sc.style.display = 'none'; o.onHide(); }
+                else if (key == 27) { that.value = that.last_val; that.sc.style.display = 'none'; o.onHide(that); }
                 // enter
                 else if (key == 13 || key == 9) {
                     var sel = that.sc.querySelector('.autocomplete-suggestion.selected');
-                    if (sel && that.sc.style.display != 'none') { o.onSelect(e, sel.getAttribute('data-val'), sel); setTimeout(function(){ that.sc.style.display = 'none'; o.onHide(); }, 20); }
+                    if (sel && that.sc.style.display != 'none') { o.onSelect(e, sel.getAttribute('data-val'), sel); setTimeout(function(){ that.sc.style.display = 'none'; o.onHide(that); }, 20); }
                 }
             };
             addEvent(that, 'keydown', that.keydownHandler);
@@ -189,12 +194,12 @@ var autoComplete = (function(){
                                     if (part in that.cache && !that.cache[part].length) { suggest([]); return; }
                                 }
                             }
-                            that.timer = setTimeout(function(){ o.source(val, suggest) }, o.delay);
+                            that.timer = setTimeout(function(){ o.source(val, suggest, that) }, o.delay);
                         }
                     } else {
                         that.last_val = val;
                         that.sc.style.display = 'none';
-                        o.onHide();
+                        o.onHide(that);
                     }
                 }
             };
@@ -224,15 +229,18 @@ var autoComplete = (function(){
                 that = null;
             }
         };
+
+        // public elems
+        this.elems = elems;
     }
     return autoComplete;
-})();
+  })();
 
-(function(){
+  (function(){
     if (typeof define === 'function' && define.amd)
         define('autoComplete', function () { return autoComplete; });
     else if (typeof module !== 'undefined' && module.exports)
         module.exports = autoComplete;
     else
         window.autoComplete = autoComplete;
-})();
+  })();
