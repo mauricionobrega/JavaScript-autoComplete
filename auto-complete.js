@@ -47,7 +47,8 @@ var autoComplete = (function(){
             onSelect: function(e, term, item){},
             onHover: function(e, term, item){},
             onShow: function(){},
-            onHide: function(){}
+            onHide: function(){},
+            blurHandler: undefined
         };
         for (var k in options) { if (options.hasOwnProperty(k)) o[k] = options[k]; }
         // init
@@ -119,7 +120,7 @@ var autoComplete = (function(){
                 }
             }, that.sc);
 
-            that.blurHandler = function(){
+            that.blurHandler = o.blurHandler || function(){
                 try { var over_sb = document.querySelector('.autocomplete-suggestions:hover'); } catch(e){ var over_sb = 0; }
                 if (!over_sb) {
                     that.last_val = that.value;
